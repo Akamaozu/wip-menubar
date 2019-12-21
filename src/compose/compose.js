@@ -2,6 +2,13 @@ const { remote } = require('electron');
 const debounce = require('lodash.debounce');
 const { ipcRenderer: ipc } = require('electron-better-ipc');
 const logger = require('electron-timber');
+const macros = {
+  "[create]": "⚡",
+  "[cheer]": "🎉",
+  "[plan]": "🤷",
+  "[yay]": "🎉",
+  "[do]": "⚡"
+};
 
 const todoBody = document.getElementById('todo-body');
 
@@ -112,6 +119,23 @@ const example = {
     },
     submitForm: function() {
       todoBody.disabled = true;
+
+      try {
+        var macro_keys = Object.keys( macros ),
+            escaped_macro_keys = macro_keys.map( ( key )=> key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') ),
+            regex = new RegExp( escaped_macro_keys.join('|'), 'gi' );
+
+        app.name = app.name.replace( regex, function( matched ){
+          return macros[ matched ];
+        });
+
+        todoBody.value = app.name;
+      }
+
+      catch( error ){
+        alert( 'macro expander failed. reason: ' + error.message );
+        alert( error.stack );
+      }
 
       if (app.selected) {
         // Completed an existing todo
